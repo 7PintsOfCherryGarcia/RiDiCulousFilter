@@ -1,2 +1,2 @@
 # RiDiCulousFilter
-Filter sequences ased on a variety of conditions
+Filter sequences based on a variety of conditions
