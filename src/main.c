@@ -1,38 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <zlib.h>
-
-#include "../khash.h"
-#include "../kseq.h"
+#include <string.h>
 
 
-typedef struct {
-  char *kmer;
-  int count;
-} kmerCount;
+int mainCountFilter(int, char **);
+int mainGCFilter(int argc, char **argv) {
+  return 0;
+}
 
-int readKmerCounts(FILE *, kmerCount *);
+int main_usage(char **argv) {
+  fprintf(stderr,"Usage: %s [command] [options] -f FILE\n", argv[0]);
+  return -1;
+}
 
 int main(int argc, char *argv[]) {
-  //Read arguments, filter type, sequence files
-  FILE *fp;
-  // Read from stdin
-  fp = fopen(argv[2], "r");
-  if (!fp) {
-    printf("Can't open input file.\n");
-    exit(1);
-    //usage();
+
+  if(argc <= 2) {
+    return main_usage(argv);
   }
 
-  kmerCount *counts = malloc(10000*sizeof(kmerCount));
-  int tmp = readKmerCounts(fp, counts);
-  printf("%d kmers parsed\n",tmp);
-  fclose(fp);
-  free(counts);
-  //Load filter into hash table
-
-  //Loop over reads apply filter and write to stdout
-
-
-  return(0);
+  if(strcmp(argv[1],"count") == 0) {
+    fprintf(stderr,"Filtering by count\n");
+    return mainCountFilter(argc - 1, argv + 1);
+  }
+  else if(strcmp(argv[1],"GC") == 0) {
+    fprintf(stderr,"Filtering by GC content\n");
+    return mainGCFilter(argc - 1, argv + 1);
+  }
+  else {
+    fprintf(stderr,"Command: \"%s\" not recognized.\n",argv[1]);
+    main_usage(argv);
+  }
+  return(-1);
 }
