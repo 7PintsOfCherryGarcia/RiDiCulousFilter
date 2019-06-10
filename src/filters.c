@@ -3,8 +3,8 @@
 #include <zlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../khash.h"
-#include "../kseq.h"
+#include "khash.h"
+#include "kseq.h"
 #include "filters.h"
 
 
@@ -29,6 +29,7 @@ int mainCountFilter(int argc, char **argv) {
       opt.file = optarg; break;
     }
   }
+
   if (!opt.lower || !opt.upper || !opt.file) {
     return usage(argv);
   }
@@ -47,46 +48,64 @@ int mainCountFilter(int argc, char **argv) {
     return(usage(argv));
   }
 
+  int numKmers = 0;
   kmerCount *counts = malloc(10000*sizeof(kmerCount));
-  counts = readKmerCounts(fp, counts);
-
+  if (!counts) {
+    fprintf(stderr, "Error insufficient memeory.\n");
+    return -1;
+  }
+  counts = readKmerCounts(fp, counts, &numKmers);
+  if(!counts) {
+    fprintf(stderr, "Error loading kmer list\n");
+    return -1;
+  }
+  fprintf(stderr,"%d kmers\n", numKmers);
   fclose(fp);
-  free(counts);
-  //Load filter into hash table
 
+  //Load filter into hash table
+  //Create and initialize hash table
+  //TODO free khash varables
+  khash_t(kmer) *h;
+  h = kh_init(kmer);
+  khint_t k;
+  k = kh_end(h);
+  int ret = loadKmerHash(h, k, counts, 10);
+  return ret;
   //Loop over reads apply filter and write to stdout
-  return(0);
 }
 
-kmerCount *readKmerCounts(FILE *fp, kmerCount *counts) {
+kmerCount *readKmerCounts(FILE *fp, kmerCount *counts, int *numKmers) {
   printf("Reading\n");
   char *line = NULL;
   size_t n = 0;
-  int kmerCounter = 0;
   char *kmer;
   int count;
   char *err;
   int numChars;
+
   while((numChars = getline(&line, &n, fp)) != -1) {
     line[numChars - 1] = '\0';
     kmer = strtok(line, "\t");
     count = strtol(strtok(NULL,"\t"), &err, 10);
     if(*err != 0) {
-      fprintf(stderr,"Error in line %d\n",kmerCounter + 1);
+      fprintf(stderr,"Error in line %d\n",*numKmers + 1);
       return NULL;
     }
-    strcpy(counts[kmerCounter].kmer,kmer);
-    counts[kmerCounter].count = count;
-    //printf("%s\t",counts[kmerCounter].kmer);
-    //printf("%d\n",counts[kmerCounter].count);
+    strcpy(counts[*numKmers].kmer,kmer);
+    counts[*numKmers].count = count;
 
-    kmerCounter += 1;
-    if(kmerCounter%1000 == 0) {
-      counts = (kmerCount *) realloc(counts,(kmerCounter + 10000)*sizeof(kmerCount));
+    *numKmers += 1;
+    if(*numKmers%1000 == 0) {
+      counts = (kmerCount *) realloc(counts,(*numKmers + 10000)*sizeof(kmerCount));
     }
   }
+
   free(line);
-  printf("EEEE\n");
-  printf("%d kmers\n",kmerCounter);
-  return(counts);
+  free(counts);
+  fprintf(stderr,"%d kmers\n", *numKmers);
+  return counts;
+}
+
+int loadKmerHash(khash_t(kmer) *h, khint_t k, kmerCount *counts, int numKmers) {
+  
 }
