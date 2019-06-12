@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
   if(strcmp(argv[1],"count") == 0) {
     fprintf(stderr,"Filtering by count\n");
-    return mainCountFilter(argc - 1, argv + 1);
+    return main_CountFilter(argc - 1, argv + 1);
   }
   else if(strcmp(argv[1],"GC") == 0) {
     fprintf(stderr,"Filtering by GC content\n");
