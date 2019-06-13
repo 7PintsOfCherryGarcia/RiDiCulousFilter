@@ -33,11 +33,12 @@ unsigned int loadKmerHash(khash_t(kmer)*, khint_t, kmerCount*, int);
 
 unsigned long filterReads(khash_t(kmer)*, khint_t, opts);
 
-int query_read(khash_t(kmer)*,
-               khint_t,
-               opts,
-               char*,
-               int);
+int *query_read(khash_t(kmer)*,
+                khint_t,
+                opts,
+                char*,
+                int,
+                char*);
 
 
 void hash_print(khash_t(kmer)*, khint_t);

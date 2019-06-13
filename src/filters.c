@@ -7,6 +7,8 @@
 #include "kseq.h"
 #include "filters.h"
 
+static int true = 1;
+
 int usage(char **argv) {
   fprintf(stderr,"Usage:\nRiDiCulous %s -l <int> -u <int> -c KMER_FILE -f SEQ_FILE\n", argv[0]);
   return -1;
@@ -200,7 +202,9 @@ unsigned long filterReads(khash_t(kmer) *h,
   int l;
   int n = 0;
   unsigned long int totalSeq = 0;
-  int pass = 0;
+  char *kmer = malloc((opt.kmerlen + 1)*sizeof(char));
+  kmer[opt.kmerlen] = '\0';
+
   seq = kseq_init(opt.seqFP);
   while ((l = kseq_read(seq)) >= 0) {
     if (l == 0) continue;
@@ -209,43 +213,46 @@ unsigned long filterReads(khash_t(kmer) *h,
       fprintf(stderr,"Error in sequence file.\n");
       return -1;
     }
-    pass = query_read(h, k, opt, seq->seq.s, l);
-    if((double)pass/(l - opt.kmerlen + 1) > opt.minfraction) {
+    if(query_read(h, k, opt, seq->seq.s, l, kmer)) {
       printf("@%s\n%s\n+\n%s\n",seq->name.s,seq->seq.s,seq->qual.s);
+    }
+    else {
+      //fprintf(stderr,"@%s\n%s\n+\n%s\n",seq->name.s,seq->seq.s,seq->qual.s);
     }
 
     n++;
   }
   kseq_destroy(seq);
+  free(kmer);
   return n;
 }
 
 
-int query_read(khash_t(kmer) *h,
-               khint_t k,
-               opts opt,
-               char *seq,
-               int l) {
+int *query_read(khash_t(kmer) *h,
+                khint_t k,
+                opts opt,
+                char *seq,
+                int l,
+                char *kmer) {
   int kmernum = 0;
-  int tmpC = 0;
-  char *kmer = malloc((opt.kmerlen + 1)*sizeof(char));
-  kmer[opt.kmerlen] = '\0';
-
+  double kmerFraction;
   for(int i = 0; i < l - opt.kmerlen + 1; i++) {
     strncpy(kmer, &seq[i], opt.kmerlen);
     k = kh_get(kmer,h,kmer);
     if (k == kh_end(h)) {
-      tmpC += 1;
+      continue;
     }
-    else {
+    else if((kh_value(h,k) >= opt.lower) && (kh_value(h,k) <= opt.upper)) {
       kmernum += 1;
     }
   }
-  if((tmpC + kmernum) != (l - opt.kmerlen + 1)) {
-    printf("ERROR\n");
-    printf("%d %d %d\n",l, kmernum, tmpC);
+  kmerFraction = (double) kmernum / (double) (l - opt.kmerlen + 1);
+  if (kmerFraction >= opt.minfraction) {
+    return &true;
   }
-  return kmernum;
+  else {
+    return NULL;
+  }
 }
 
 

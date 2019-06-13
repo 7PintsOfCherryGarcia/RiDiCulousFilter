@@ -4,7 +4,7 @@
 #include <string.h>
 
 
-int mainCountFilter(int, char **);
+int main_CountFilter(int, char **);
 int mainGCFilter(int argc, char **argv) {
   return 0;
 }
