@@ -91,6 +91,7 @@ int main_CountFilter(int argc, char **argv) {
   khint_t k;
   k = kh_end(h);
 
+  fprintf(stderr,"Loading kmers\n");
   int kmerCount = readKmerCounts(fp, opt.kmerlen, h, &k);
   if(kmerCount <= 0) {
     fprintf(stderr, "Error loading kmer list\n");
@@ -99,13 +100,8 @@ int main_CountFilter(int argc, char **argv) {
   fprintf(stderr,"%d kmers\n", kmerCount);
   fclose(fp);
 
-  //Load filter into hash table
-  //Create and initialize hash table
 
-  //unsigned int ret = loadKmerHash(h, k, counts, numKmers);
-
-  //fprintf(stderr,"Loaded %d kmer counts.\n",ret);
-  //free(counts);
+  fprintf(stderr,"Loaded %d kmer counts.\n",kmerCount);
 
   //Loop over reads apply filter and write to stdout
   fprintf(stderr,"Filtering reads.\n");
