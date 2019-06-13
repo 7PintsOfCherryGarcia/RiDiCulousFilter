@@ -84,27 +84,28 @@ int main_CountFilter(int argc, char **argv) {
   }
 
 
-  int numKmers = 0;
-  kmerCount *counts;
-  counts = readKmerCounts(fp, &numKmers, opt.kmerlen);
-  if(!counts || numKmers <= 0) {
-    fprintf(stderr, "Error loading kmer list\n");
-    free(counts);
-    return -1;
-  }
-  fprintf(stderr,"%d kmers\n", numKmers);
-  fclose(fp);
 
-  //Load filter into hash table
-  //Create and initialize hash table
+  //Khash
   khash_t(kmer) *h;
   h = kh_init(kmer);
   khint_t k;
   k = kh_end(h);
-  fprintf(stderr,"Loading into hash table\n");
-  unsigned int ret = loadKmerHash(h, k, counts, numKmers);
-  fprintf(stderr,"Loaded %d kmer counts.\n",ret);
-  free(counts);
+
+  int kmerCount = readKmerCounts(fp, opt.kmerlen, h, &k);
+  if(kmerCount <= 0) {
+    fprintf(stderr, "Error loading kmer list\n");
+    return -1;
+  }
+  fprintf(stderr,"%d kmers\n", kmerCount);
+  fclose(fp);
+
+  //Load filter into hash table
+  //Create and initialize hash table
+
+  //unsigned int ret = loadKmerHash(h, k, counts, numKmers);
+
+  //fprintf(stderr,"Loaded %d kmer counts.\n",ret);
+  //free(counts);
 
   //Loop over reads apply filter and write to stdout
   fprintf(stderr,"Filtering reads.\n");
@@ -112,16 +113,16 @@ int main_CountFilter(int argc, char **argv) {
   fprintf(stderr,"%ld reads processed\n",numReads);
   hash_destroy(h, k);
   gzclose(opt.seqFP);
-  return ret;
+  return 0;
 }
 
 
-kmerCount *readKmerCounts(FILE *fp, int *numKmers, int kmerlen) {
-  kmerCount *counts = malloc(100000*sizeof(kmerCount));
-  if (!counts) {
-    fprintf(stderr, "Error insufficient memeory.\n");
-    return NULL;
-  }
+int readKmerCounts(FILE *fp,
+                   int kmerlen,
+                   khash_t(kmer) *h,
+                   khint_t *k) {
+
+  int kmerCount = 0;
   char *line = NULL;
   size_t n = 0;
   char *kmer;
@@ -130,6 +131,7 @@ kmerCount *readKmerCounts(FILE *fp, int *numKmers, int kmerlen) {
   char *err;
   int numChars;
   int lineNum = 1;
+  int absent = 0;
 
   while((numChars = getline(&line, &n, fp)) != -1) {
     line[numChars - 1] = '\0';
@@ -166,33 +168,34 @@ kmerCount *readKmerCounts(FILE *fp, int *numKmers, int kmerlen) {
     }
 
 
-    strcpy(counts[*numKmers].kmer,kmer);
-    counts[*numKmers].count = count;
+    //Load into hash
+    *k = kh_put(kmer, h, kmer,&absent);
+    kh_key(h, *k) = strdup(kmer);
+    kh_value(h,*k) = count;
 
-    *numKmers += 1;
+
+    kmerCount += 1;
     lineNum += 1;
-    if(*numKmers%100000 == 0) {
-      counts = (kmerCount *) realloc(counts,(*numKmers + 100000)*sizeof(kmerCount));
-    }
+
   }
 
   free(line);
-  return counts;
+  return kmerCount;
 }
 
 
-unsigned int loadKmerHash(khash_t(kmer) *h,
-                          khint_t k,
-                          kmerCount *counts,
-                          int numKmers) {
-  int absent = 0;
-  for(int i = 0; i < numKmers; i++) {
-    k = kh_put(kmer, h, counts[i].kmer,&absent);
-    kh_key(h, k) = strdup(counts[i].kmer);
-    kh_value(h,k) = counts[i].count;
-  }
-  return kh_size(h);
-}
+//unsigned int loadKmerHash(khash_t(kmer) *h,
+                          //                          khint_t k,
+                          //                          kmerCount *counts,
+                          //                          int numKmers) {
+  //  int absent = 0;
+  //  for(int i = 0; i < numKmers; i++) {
+    //    k = kh_put(kmer, h, counts[i].kmer,&absent);
+    //    kh_key(h, k) = strdup(counts[i].kmer);
+    //   kh_value(h,k) = counts[i].count;
+    //  }
+  //  return kh_size(h);
+  //}
 
 
 unsigned long filterReads(khash_t(kmer) *h,

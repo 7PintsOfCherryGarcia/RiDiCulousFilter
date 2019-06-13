@@ -25,7 +25,7 @@ typedef struct {
 int main_CountFilter(int, char **);
 
 
-kmerCount *readKmerCounts(FILE*, int*, int);
+int readKmerCounts(FILE*, int, khash_t(kmer)*, khint_t*);
 
 
 unsigned int loadKmerHash(khash_t(kmer)*, khint_t, kmerCount*, int);
