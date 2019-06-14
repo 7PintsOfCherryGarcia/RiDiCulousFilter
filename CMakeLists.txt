@@ -11,7 +11,7 @@ include_directories("${PROJECT_BINARY_DIR}"
 
 # add the executable
 add_executable(RiDiCulous src/main.c
-                          src/filters.c)
+                          src/main_count.c)
 #)
 find_library(ZLIB_LIBRARY
              NAMES z)
