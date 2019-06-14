@@ -42,10 +42,14 @@ void count_readOpt(int, char**, opts*);
 void count_printOpt(opts);
 
 
-int count_readKmers(FILE*, int, khash_t(kmer)*, khint_t*);
+void count_readKmers(FILE*, opts, khash_t(kmer)*, khint_t*, int*, int*);
 
 
-unsigned long count_filterReads(khash_t(kmer)*, khint_t, opts);
+void count_filterReads(khash_t(kmer)*,
+                       khint_t,
+                       opts,
+                       unsigned long*,
+                       unsigned long*);
 
 
 int *count_queryRead(khash_t(kmer)*,

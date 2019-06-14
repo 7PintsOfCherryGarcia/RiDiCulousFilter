@@ -148,31 +148,39 @@ int main_count(int argc, char **argv) {
 
   //Load kmer counts into hash table
   fprintf(stderr,"\tLoading kmer count table\n");
-  int kmerCount = count_readKmers(fp, opt.kmerlen, h, &k);
+  int kmerCount = 0;
+  int rkCount = 0;
+  count_readKmers(fp, opt, h, &k, &kmerCount, &rkCount);
   if(kmerCount <= 0) {
     fprintf(stderr, "\tERROR: kmer count table could not be parsed.\n\n");
     return count_usage();
   }
   fclose(fp);
-  fprintf(stderr,"\tLoaded %d kmer counts.\n",kmerCount);
+  fprintf(stderr,"\tLoaded %d kmers.\n",kmerCount);
+  fprintf(stderr,"\tSkipped %d kmers.\n",rkCount);
 
 
   //Loop over reads apply filter and write to stdout
   fprintf(stderr,"\tFiltering reads.\n");
-  unsigned long numReads = count_filterReads(h, k, opt);
+  unsigned long numReads = 0;
+  unsigned long numFiltered = 0;
+  count_filterReads(h, k, opt, &numReads, &numFiltered);
   fprintf(stderr,"\t%ld reads processed\n",numReads);
+  fprintf(stderr,"\t%ld reads filtered\n",numFiltered);
+  fprintf(stderr,"\t%ld reads kept\n",numReads-numFiltered);
   hash_destroy(h, k);
   gzclose(opt.seqFP);
   return 0;
 }
 
 
-int count_readKmers(FILE *fp,
-                   int kmerlen,
-                   khash_t(kmer) *h,
-                   khint_t *k) {
+void count_readKmers(FILE *fp,
+                    opts opt,
+                    khash_t(kmer) *h,
+                    khint_t *k,
+                    int *kmerCount,
+                    int *rkCount) {
 
-  int kmerCount = 0;
   char *line = NULL;
   size_t n = 0;
   char *kmer;
@@ -193,7 +201,7 @@ int count_readKmers(FILE *fp,
       lineNum += 1;
       continue;
     }
-    else if(strlen(kmer) != kmerlen) {
+    else if(strlen(kmer) != opt.kmerlen) {
       fprintf(stderr,
               "\tWARNING in line %d\nkmer length of different size. Skipping\n",
               lineNum);
@@ -219,27 +227,29 @@ int count_readKmers(FILE *fp,
 
 
     //Load into hash
-    *k = kh_put(kmer, h, kmer,&absent);
-    kh_key(h, *k) = strdup(kmer);
-    kh_value(h,*k) = count;
+    if(count >= opt.lower && count <= opt.upper) {
+      *k = kh_put(kmer, h, kmer,&absent);
+      kh_key(h, *k) = strdup(kmer);
+      //kh_value(h,*k) = count;
+      *kmerCount += 1;
+    }
+    else *rkCount += 1;
 
-
-    kmerCount += 1;
     lineNum += 1;
 
   }
 
   free(line);
-  return kmerCount;
 }
 
 
-unsigned long count_filterReads(khash_t(kmer) *h,
-                                khint_t k,
-                                opts opt) {
+void count_filterReads(khash_t(kmer) *h,
+                       khint_t k,
+                       opts opt,
+                       unsigned long *numReads,
+                       unsigned long *numFiltered) {
   kseq_t *seq;
   int l;
-  int n = 0;
   unsigned long int totalSeq = 0;
   char *kmer = malloc((opt.kmerlen + 1)*sizeof(char));
   kmer[opt.kmerlen] = '\0';
@@ -250,17 +260,18 @@ unsigned long count_filterReads(khash_t(kmer) *h,
     totalSeq += l;
     if (l <= 0) {
       fprintf(stderr,"\nError in sequence file.\n");
-      return -1;
+      *numReads =  -1;
+      break;
     }
     if(count_queryRead(h, k, opt, seq->seq.s, l, kmer)) {
       printf("@%s\n%s\n+\n%s\n",seq->name.s,seq->seq.s,seq->qual.s);
     }
     //Add filtered counter
-    n++;
+    else *numFiltered += 1;
+    *numReads += 1;
   }
   kseq_destroy(seq);
   free(kmer);
-  return n;
 }
 
 
@@ -278,7 +289,7 @@ int *count_queryRead(khash_t(kmer) *h,
     if (k == kh_end(h)) {
       continue;
     }
-    else if((kh_value(h,k) >= opt.lower) && (kh_value(h,k) <= opt.upper)) {
+    else {
       kmernum += 1;
     }
   }
