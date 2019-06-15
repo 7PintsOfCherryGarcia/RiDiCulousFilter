@@ -30,31 +30,31 @@ typedef struct {
   char *seqfile;       // sequence filename
   gzFile seqFP;        // sequence filen object
   double minfraction;  // kmer coverage fraction threshold
-} opts;
+} COUNTopts;
 
 
 int main_count(int, char **);
 
 
-void count_readOpt(int, char**, opts*);
+void count_readOpt(int, char**, COUNTopts*);
 
 
-void count_printOpt(opts);
+void count_printOpt(COUNTopts);
 
 
-void count_readKmers(FILE*, opts, khash_t(kmer)*, khint_t*, int*, int*);
+void count_readKmers(FILE*, COUNTopts, khash_t(kmer)*, khint_t*, int*, int*);
 
 
 void count_filterReads(khash_t(kmer)*,
                        khint_t,
-                       opts,
+                       COUNTopts,
                        unsigned long*,
                        unsigned long*);
 
 
 int *count_queryRead(khash_t(kmer)*,
                      khint_t,
-                     opts,
+                     COUNTopts,
                      char*,
                      int,
                      char*);

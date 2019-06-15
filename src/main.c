@@ -5,9 +5,9 @@
 
 
 int main_count(int, char**);
-int main_gc(int , char**);
+int main_gc(int, char**);
 
-  int main_kmer(int argc, char **argv){
+int main_kmer(int argc, char **argv) {
   return 0;
 }
 

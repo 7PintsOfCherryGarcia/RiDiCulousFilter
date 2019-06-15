@@ -44,7 +44,7 @@ int count_usage() {
 /*
 Parse options for "count" command. See main_count.h file.
 */
-void count_readOpt(int argc, char **argv, opts* opt) {
+void count_readOpt(int argc, char **argv, COUNTopts* opt) {
   int elem;
   while (( elem = getopt(argc, argv, ":c:f:hk:l:m:u:") ) >= 0) {
     switch(elem) {
@@ -87,18 +87,14 @@ void count_readOpt(int argc, char **argv, opts* opt) {
     }
   }
 
-<<<<<<< HEAD
-  if(!opt->kmerfile || !opt->seqfile) {
+  if (!opt->kmerfile || !opt->seqfile) {
+    fprintf(stderr,"\t ERROR: Please provide kmer count file (-c) and\n");
+    fprintf(stderr,"\t        sequence file (-f)\n\n");
     exit(count_usage());
   }
 
   if(opt->lower >= opt->upper) {
     fprintf(stderr, "\tERROR: lower bound must be less than upper bound.\n\n");
-=======
-  if (!opt->kmerfile || !opt->seqfile) {
-    fprintf(stderr,"\t ERROR: Please provide kmer count file (-c) and\n");
-    fprintf(stderr,"\t        sequence file (-f)\n\n");
->>>>>>> dev
     exit(count_usage());
   }
 
@@ -115,7 +111,7 @@ void count_readOpt(int argc, char **argv, opts* opt) {
 /*
 Print input options
 */
-void count_printOpt(opts opt) {
+void count_printOpt(COUNTopts opt) {
   fprintf(stderr,"\t kmer count file: %s\n",opt.kmerfile);
   fprintf(stderr,"\t sequence file: %s\n",opt.seqfile);
   fprintf(stderr,"\t lower count bound: %d\n",opt.lower);
@@ -130,7 +126,7 @@ Main function for command "count". See main_count.h file.
 */
 int main_count(int argc, char **argv) {
   //Set options
-  opts opt;
+  COUNTopts opt;
   opt.kmerfile = NULL;
   opt.seqfile = NULL;
   opt.seqFP = NULL;
@@ -214,11 +210,11 @@ Parse kmer and their counts. Store in hash table kmers where counts satisfy
 lower and uper bound thersholds. See main_count.h file.
 */
 void count_readKmers(FILE *fp,
-                    opts opt,
-                    khash_t(kmer) *h,
-                    khint_t *k,
-                    int *kmerCount,
-                    int *rkCount) {
+                     COUNTopts opt,
+                     khash_t(kmer) *h,
+                     khint_t *k,
+                     int *kmerCount,
+                     int *rkCount) {
 
   //Pointer to line string read from kmer count file
   char *line = NULL;
@@ -287,7 +283,7 @@ void count_readKmers(FILE *fp,
 
 void count_filterReads(khash_t(kmer) *h,
                        khint_t k,
-                       opts opt,
+                       COUNTopts opt,
                        unsigned long *numReads,
                        unsigned long *numFiltered) {
   kseq_t *seq;
@@ -318,11 +314,11 @@ void count_filterReads(khash_t(kmer) *h,
 
 
 int *count_queryRead(khash_t(kmer) *h,
-                khint_t k,
-                opts opt,
-                char *seq,
-                int l,
-                char *kmer) {
+                     khint_t k,
+                     COUNTopts opt,
+                     char *seq,
+                     int l,
+                     char *kmer) {
   int kmernum = 0;
   double kmerFraction;
   for(int i = 0; i < l - opt.kmerlen + 1; i++) {
