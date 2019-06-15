@@ -4,11 +4,10 @@
 #include <string.h>
 
 
-int main_count(int, char **);
-int main_gc(int argc, char **argv) {
-  return 0;
-}
-int main_kmer(int argc, char **argv){
+int main_count(int, char**);
+int main_gc(int , char**);
+
+  int main_kmer(int argc, char **argv){
   return 0;
 }
 
