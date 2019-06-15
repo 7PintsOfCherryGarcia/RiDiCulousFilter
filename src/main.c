@@ -13,11 +13,11 @@ int main_kmer(int argc, char **argv){
 }
 
 static int main_usage() {
-  fprintf(stderr,"Usage: RiDiCulous [command] [options] -f FILE\n");
-  fprintf(stderr,"Commands:\n");
-  fprintf(stderr,"\tcount -  Filter reads based on kmer counts.\n\n");
+  fprintf(stderr,"Usage: RiDiCulous [command] [options] -f FILE\n\n");
+  fprintf(stderr,"Commands:\n\n");
+  fprintf(stderr,"\tcount -  Filter reads based on kmer counts.\n");
   fprintf(stderr,"\t         You must suply a kmer count table.\n\n");
-  fprintf(stderr,"\tkmer  -  Filter reads based on kmer presence.\n\n");
+  fprintf(stderr,"\tkmer  -  Filter reads based on kmer presence.\n");
   fprintf(stderr,"\t         You must suply a kmer table.\n\n");
   fprintf(stderr,"\tgc    -  Filter reads based on GC content.\n\n");
   fprintf(stderr,"Help information for these commands is diplayed on\n");
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   }
 
   if(strcmp(argv[1],"count") == 0) {
-    fprintf(stderr,"Command: count\n");
+    fprintf(stderr,"Command: count\n\n");
     return main_count(argc - 1, argv + 1);
   }
   else if(strcmp(argv[1],"gc") == 0) {
