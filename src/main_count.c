@@ -7,9 +7,15 @@
 #include "kseq.h"
 #include "main_count.h"
 
+
+//Used as a TRUE/FALSE flag
 static int true = 1;
 
 
+/*
+Usage message in case user specifies -h flag or ran with wrong options.
+For example: -l 10 -u 4. Upper bound must be greater than lower bound
+*/
 int count_usage() {
   fprintf(stderr,
           "Usage: RiDiCulous [options] -c KMER_FILE -f SEQ_FILE\n");
@@ -35,21 +41,24 @@ int count_usage() {
 }
 
 
+/*
+Parse options for "count" command. See main_count.h file.
+*/
 void count_readOpt(int argc, char **argv, opts* opt) {
   int elem;
-  while (( elem = getopt(argc, argv, "c:f:hk:l:m:u:") ) >= 0) {
+  while (( elem = getopt(argc, argv, ":c:f:hk:l:m:u:") ) >= 0) {
     switch(elem) {
     case 'l':
       opt->lower = atoi(optarg);
       if(!opt->lower) {
-        fprintf(stderr,"\tERROR: Option \"-l %s\" not valid\n\n",optarg);
+        fprintf(stderr,"\t ERROR: Option \"-l %s\" not valid\n\n",optarg);
         exit(count_usage());
       }
       break;
     case 'u':
       opt->upper = atoi(optarg);
       if(!opt->upper) {
-        fprintf(stderr,"\tERROR: Option \"-u %s\" not valid\n\n",optarg);
+        fprintf(stderr,"\t ERROR: Option \"-u %s\" not valid\n\n",optarg);
         exit(count_usage());
       }
       break;
@@ -64,21 +73,28 @@ void count_readOpt(int argc, char **argv, opts* opt) {
     case 'm':
       opt->minfraction = atof(optarg);
       if(!opt->minfraction) {
-        fprintf(stderr,"\tERROR: Option \"-m %s\" not valid\n\n",optarg);
+        fprintf(stderr,"\t ERROR: Option \"-m %s\" not valid\n\n",optarg);
         exit(count_usage());
       }
       break;
     case 'k':
       opt->kmerlen = atoi(optarg);
+      if(!opt->kmerlen) {
+        fprintf(stderr,"\t ERROR: Option \"-k %s\" not valid\n\n",optarg);
+        exit(count_usage());
+      }
+      break;
     }
   }
 
   if (!opt->kmerfile || !opt->seqfile) {
+    fprintf(stderr,"\t ERROR: Please provide kmer count file (-c) and\n");
+    fprintf(stderr,"\t        sequence file (-f)\n\n");
     exit(count_usage());
   }
 
   if(opt->minfraction <= 0 || opt->minfraction > 1) {
-    fprintf(stderr,"\tWARNING: minimum fraction not in \(0,1] range.\n");
+    fprintf(stderr,"\t WARNING: minimum fraction not in \(0,1] range.\n");
     fprintf(stderr,"\t         Setting to default -m 0.8\n\n");
     opt->minfraction = 0.80;
   }
@@ -87,15 +103,22 @@ void count_readOpt(int argc, char **argv, opts* opt) {
 }
 
 
+/*
+Print input options
+*/
 void count_printOpt(opts opt) {
-  fprintf(stderr,"\tkmer count file: %s\n",opt.kmerfile);
-  fprintf(stderr,"\tsequence file: %s\n",opt.seqfile);
-  fprintf(stderr,"\tlower count bound: %d\n",opt.lower);
-  fprintf(stderr,"\tupper count bound: %d\n",opt.upper);
-  fprintf(stderr,"\tminimum read coverage fraction: %f\n\n",opt.minfraction);
+  fprintf(stderr,"\t kmer count file: %s\n",opt.kmerfile);
+  fprintf(stderr,"\t sequence file: %s\n",opt.seqfile);
+  fprintf(stderr,"\t lower count bound: %d\n",opt.lower);
+  fprintf(stderr,"\t upper count bound: %d\n",opt.upper);
+  fprintf(stderr,"\t minimum read coverage fraction: %f\n",opt.minfraction);
+  fprintf(stderr,"\t kmer length: %d\n\n",opt.kmerlen);
 }
 
 
+/*
+Main function for command "count". See main_count.h file.
+*/
 int main_count(int argc, char **argv) {
   //Set options
   opts opt;
@@ -119,22 +142,23 @@ int main_count(int argc, char **argv) {
   }
   fp = fopen(opt.kmerfile, "r");
   if (!fp) {
-    fprintf(stderr,"\tCan't open input file %s.\n", opt.kmerfile);
+    fprintf(stderr,"\t ERROR: Can't open input file %s.\n\n", opt.kmerfile);
     return(count_usage());
   }
 
   //Open sequence file
   if(strcmp(opt.seqfile,"-") == 0) {
-    opt.seqfile = "/dev/stdin";
     if(stdinFlag == 1) {
-      fprintf(stderr,"\tERROR: -f - and  -c - are incompatibe.\n");
-      fprintf(stderr,"\tOnly one input file can be read from stdin.\n\n");
+      fprintf(stderr,"\t ERROR: -f - and  -c - are incompatibe.\n");
+      fprintf(stderr,"\t Only one input file can be read from stdin.\n\n");
       return count_usage();
     }
+    opt.seqfile = "/dev/stdin";
   }
+
   opt.seqFP = gzopen(opt.seqfile,"r");
   if(!opt.seqFP) {
-    fprintf(stderr,"\tERROR: Can't open sequence file.\n\n");
+    fprintf(stderr,"\t ERROR: Can't open sequence file.\n\n");
     return count_usage();
   }
 
@@ -147,33 +171,39 @@ int main_count(int argc, char **argv) {
   k = kh_end(h);
 
   //Load kmer counts into hash table
-  fprintf(stderr,"\tLoading kmer count table\n");
+  fprintf(stderr,"\t Loading kmer count table\n");
   int kmerCount = 0;
   int rkCount = 0;
   count_readKmers(fp, opt, h, &k, &kmerCount, &rkCount);
   if(kmerCount <= 0) {
-    fprintf(stderr, "\tERROR: kmer count table could not be parsed.\n\n");
+    fprintf(stderr, "\t ERROR: kmer count table could not be parsed.\n\n");
     return count_usage();
   }
   fclose(fp);
-  fprintf(stderr,"\tLoaded %d kmers.\n",kmerCount);
-  fprintf(stderr,"\tSkipped %d kmers.\n",rkCount);
+  fprintf(stderr,"\t\t Loaded %d kmers.\n",kmerCount);
+  fprintf(stderr,"\t\t Skipped %d kmers.\n",rkCount);
 
 
   //Loop over reads apply filter and write to stdout
-  fprintf(stderr,"\tFiltering reads.\n");
+  fprintf(stderr,"\t Filtering reads.\n");
   unsigned long numReads = 0;
   unsigned long numFiltered = 0;
   count_filterReads(h, k, opt, &numReads, &numFiltered);
   fprintf(stderr,"\t%ld reads processed\n",numReads);
   fprintf(stderr,"\t%ld reads filtered\n",numFiltered);
   fprintf(stderr,"\t%ld reads kept\n",numReads-numFiltered);
+
+  //Free memoory
   hash_destroy(h, k);
   gzclose(opt.seqFP);
   return 0;
 }
 
 
+/*
+Parse kmer and their counts. Store in hash table kmers where counts satisfy
+lower and uper bound thersholds. See main_count.h file.
+*/
 void count_readKmers(FILE *fp,
                     opts opt,
                     khash_t(kmer) *h,
@@ -181,13 +211,21 @@ void count_readKmers(FILE *fp,
                     int *kmerCount,
                     int *rkCount) {
 
+  //Pointer to line string read from kmer count file
   char *line = NULL;
   size_t n = 0;
+
+  //Pointer to kmer string extracted from first part of line
   char *kmer;
+  //Pointer to count string extracted from second part of line
   char *countStr;
+  //Count variable (value represented in *countStr is stored here)
   int count;
+  //Error variable when for when parsing goes wrong
   char *err;
+  //Number of characters read in each line. Used for removing newline character
   int numChars;
+  //Keep track of line number for error reporting
   int lineNum = 1;
   int absent = 0;
 
@@ -195,32 +233,28 @@ void count_readKmers(FILE *fp,
     line[numChars - 1] = '\0';
     kmer = strtok(line, "\t");
     if(!kmer) {
-      fprintf(stderr,
-              "\tWARNING: In line %d\nCould not read kmer sequence. Skipping\n",
-              lineNum);
+      fprintf(stderr,"\t\t WARNING: In line %d\n\t\t\t Could not read", lineNum);
+      fprintf(stderr," kmer sequence. Skipping\n");
       lineNum += 1;
       continue;
     }
     else if(strlen(kmer) != opt.kmerlen) {
-      fprintf(stderr,
-              "\tWARNING in line %d\nkmer length of different size. Skipping\n",
-              lineNum);
+      fprintf(stderr,"\t\t WARNING in line %d\n\t\t\t kmer length of",lineNum);
+      fprintf(stderr," different size. Skipping\n");
       lineNum += 1;
       continue;
     }
     countStr = strtok(NULL,"\t");
     if(!countStr) {
-      fprintf(stderr,
-              "\tWARNING: In line %d\nkmer %s without a count. Skipping\n",
-              lineNum, kmer);
+      fprintf(stderr,"\t\t WARNING: In line %d\n\t\t\t kmer %s", lineNum, kmer);
+      fprintf(stderr," without a count. Skipping\n");
       lineNum += 1;
       continue;
     }
     count = strtol(countStr, &err, 10);
     if(*err != 0) {
-      fprintf(stderr,
-              "\tWARNING in line %d\ncould not read kmer count. Skipping\n",
-              lineNum);
+      fprintf(stderr,"\t\t WARNING in line %d\n\t\t\tcould not", lineNum);
+      fprintf(stderr," read kmer count. Skipping\n");
       lineNum += 1;
       continue;
     }
@@ -230,7 +264,6 @@ void count_readKmers(FILE *fp,
     if(count >= opt.lower && count <= opt.upper) {
       *k = kh_put(kmer, h, kmer,&absent);
       kh_key(h, *k) = strdup(kmer);
-      //kh_value(h,*k) = count;
       *kmerCount += 1;
     }
     else *rkCount += 1;
@@ -303,6 +336,7 @@ int *count_queryRead(khash_t(kmer) *h,
 }
 
 
+//For testing purposes
 void hash_print(khash_t(kmer) *h, khint_t k) {
   //Loop over hash integers and print key value pair
   for (k = 0; k < kh_end(h); ++k) {
@@ -313,6 +347,9 @@ void hash_print(khash_t(kmer) *h, khint_t k) {
 }
 
 
+/*
+Free string pointers used as keys in hash table. See main_count.h
+*/
 void hash_destroy(khash_t(kmer) *h, khint_t k) {
   for (k = 0; k < kh_end(h); ++k) {
     if (kh_exist(h, k)) {
