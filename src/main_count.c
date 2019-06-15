@@ -12,7 +12,7 @@ static int true = 1;
 
 int count_usage() {
   fprintf(stderr,
-          "Usage: RiDiCulous [options] -c KMER_FILE -f SEQ_FILE\n");
+          "Usage: RiDiCulous count [options] -c KMER_FILE -f SEQ_FILE\n");
   fprintf(stderr,"Options:\n\n");
   fprintf(stderr,"\t-c\tkmer count file. Tab separated text file with\n");
   fprintf(stderr,"\t  \tkmer sequences as first column and counts in\n");
@@ -73,7 +73,12 @@ void count_readOpt(int argc, char **argv, opts* opt) {
     }
   }
 
-  if (!opt->kmerfile || !opt->seqfile) {
+  if(!opt->kmerfile || !opt->seqfile) {
+    exit(count_usage());
+  }
+
+  if(opt->lower >= opt->upper) {
+    fprintf(stderr, "\tERROR: lower bound must be less than upper bound.\n\n");
     exit(count_usage());
   }
 
