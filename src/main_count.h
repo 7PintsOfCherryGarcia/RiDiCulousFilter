@@ -30,6 +30,7 @@ typedef struct {
   char *seqfile;       // sequence filename
   gzFile seqFP;        // sequence filen object
   double minfraction;  // kmer coverage fraction threshold
+  int canonical;
 } COUNTopts;
 
 

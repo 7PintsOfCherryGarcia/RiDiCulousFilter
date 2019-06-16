@@ -17,7 +17,9 @@ typedef struct {
   double maxGC;        // maximum GC content thershold
   char *seqfile;       // sequence filename
   gzFile seqFP;        // sequence file object
+  int canonical;
 } GCopts;
+
 
 
 int main_gc(int, char **);
@@ -29,7 +31,10 @@ void gc_printOpt(GCopts);
 void gc_readOpt(int, char**, GCopts*);
 
 
-void gc_filterReads(GCopts opt, unsigned long*, unsigned long*);
+void gc_filterReads(GCopts, unsigned long*, unsigned long*);
 
 
-int *gc_queryRead(GCopts opt, char *seq, int l);
+int *gc_queryRead(GCopts, char*, int);
+
+
+

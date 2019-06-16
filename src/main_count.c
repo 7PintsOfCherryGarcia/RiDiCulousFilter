@@ -6,10 +6,8 @@
 #include "khash.h"
 #include "kseq.h"
 #include "main_count.h"
+#include "common.h"
 
-
-//Used as a TRUE/FALSE flag
-static int true = 1;
 
 
 /*
@@ -23,6 +21,8 @@ int count_usage() {
   fprintf(stderr,"\t-c\tkmer count file. Tab separated text file with\n");
   fprintf(stderr,"\t  \tkmer sequences as first column and counts in\n");
   fprintf(stderr,"\t  \tsecond column.\n\n");
+  fprintf(stderr,"\t-C\tUse canonical kmers. Sequences are reversed compliment");
+  fprintf(stderr,"ed\n\t \tand smallest lexicographically sequence is used\n\n");
   fprintf(stderr,"\t-f\tSequence file. fasta/q file with sequences or\n");
   fprintf(stderr,"\t  \tsequencing reads. Can be gziped. provide \"-\" if\n");
   fprintf(stderr,"\t  \treading from stdin. If using sequencing data eg.\n");
@@ -35,7 +35,9 @@ int count_usage() {
   fprintf(stderr,"\t  \tcovered by at least this fraction of count passing\n");
   fprintf(stderr,"\t  \tkmers. Otherwise, sequence is filtered out\n\n");
   fprintf(stderr,"\t-u\tmaximum count threshold. Only kmers with counts\n");
-  fprintf(stderr,"\t  \tless than or equal to this value will be consifered.\n");
+  fprintf(stderr,"\t  \tless than or equal to this value will be consife");
+  fprintf(stderr,"red.\n\n");
+  fprintf(stderr,"\t-h\tThis help message\n");
   fprintf(stderr,"\n");
   return -1;
 }
@@ -46,7 +48,7 @@ Parse options for "count" command. See main_count.h file.
 */
 void count_readOpt(int argc, char **argv, COUNTopts* opt) {
   int elem;
-  while (( elem = getopt(argc, argv, ":c:f:hk:l:m:u:") ) >= 0) {
+  while (( elem = getopt(argc, argv, ":c:Cf:hk:l:m:u:") ) >= 0) {
     switch(elem) {
     case 'l':
       opt->lower = atoi(optarg);
@@ -84,6 +86,8 @@ void count_readOpt(int argc, char **argv, COUNTopts* opt) {
         exit(count_usage());
       }
       break;
+    case 'C':
+      opt->canonical=true;
     }
   }
 
@@ -93,10 +97,17 @@ void count_readOpt(int argc, char **argv, COUNTopts* opt) {
     exit(count_usage());
   }
 
-  if(opt->lower >= opt->upper) {
+  if((opt->lower < 0) || (opt->upper < 0 )) {
+    fprintf(stderr, "\tERROR: please provide lower kmer count bound (-l) ");
+    fprintf(stderr, "and upper kmer count bound (-u).\n\n");
+    exit(count_usage());
+  }
+
+  if( opt->lower >= opt->upper) {
     fprintf(stderr, "\tERROR: lower bound must be less than upper bound.\n\n");
     exit(count_usage());
   }
+
 
   if(opt->minfraction <= 0 || opt->minfraction > 1) {
     fprintf(stderr,"\t WARNING: minimum fraction not in \(0,1] range.\n");
@@ -117,7 +128,13 @@ void count_printOpt(COUNTopts opt) {
   fprintf(stderr,"\t lower count bound: %d\n",opt.lower);
   fprintf(stderr,"\t upper count bound: %d\n",opt.upper);
   fprintf(stderr,"\t minimum read coverage fraction: %f\n",opt.minfraction);
-  fprintf(stderr,"\t kmer length: %d\n\n",opt.kmerlen);
+  fprintf(stderr,"\t kmer length: %d\n",opt.kmerlen);
+  if(opt.canonical) {
+    fprintf(stderr,"\t use canonical kmers: true\n");
+  }
+  else {
+    fprintf(stderr,"\t use canonical kmers: false\n\n");
+  }
 }
 
 
@@ -130,8 +147,11 @@ int main_count(int argc, char **argv) {
   opt.kmerfile = NULL;
   opt.seqfile = NULL;
   opt.seqFP = NULL;
+  opt.lower = -1;
+  opt.upper = -1;
   opt.minfraction = 0.80;
   opt.kmerlen = 31;
+  opt.canonical = false;
 
   //Read options
   count_readOpt(argc, argv, &opt);
@@ -291,7 +311,7 @@ void count_filterReads(khash_t(kmer) *h,
   unsigned long int totalSeq = 0;
   char *kmer = malloc((opt.kmerlen + 1)*sizeof(char));
   kmer[opt.kmerlen] = '\0';
-
+  char *revComp;
   seq = kseq_init(opt.seqFP);
   while ((l = kseq_read(seq)) >= 0) {
     if (l == 0) continue;
@@ -301,6 +321,14 @@ void count_filterReads(khash_t(kmer) *h,
       *numReads =  -1;
       break;
     }
+
+    if(opt.canonical) {
+      revComp = gc_revComp(l, seq->seq.s);
+      //Compare sequence and reverse compliment. Keep lexicgraphically
+      //smales one
+      seq->seq.s = (compSeq(seq->seq.s,revComp,l) <= 0) ? seq->seq.s:revComp;
+    }
+
     if(count_queryRead(h, k, opt, seq->seq.s, l, kmer)) {
       printf("@%s\n%s\n+\n%s\n",seq->name.s,seq->seq.s,seq->qual.s);
     }
@@ -308,6 +336,7 @@ void count_filterReads(khash_t(kmer) *h,
     else *numFiltered += 1;
     *numReads += 1;
   }
+  free(revComp);
   kseq_destroy(seq);
   free(kmer);
 }
@@ -336,8 +365,9 @@ int *count_queryRead(khash_t(kmer) *h,
     return &true;
   }
   else {
-    return NULL;
+    return &false;
   }
+  return NULL;
 }
 
 
