@@ -42,6 +42,27 @@ int count_usage() {
   return -1;
 }
 
+int kmer_usage() {
+    fprintf(stderr,
+          "Usage: RiDiCulous kmer [options] -c KMER_FILE -f SEQ_FILE\n");
+  fprintf(stderr,"Options:\n\n");
+  fprintf(stderr,"\t-c\tkmer file. File with kmer sequences\n");
+  fprintf(stderr,"\t  \tMust be of same length.\n\n");
+  fprintf(stderr,"\t-C\tUse canonical kmers. Sequences are reversed compliment");
+  fprintf(stderr,"ed\n\t \tand smallest lexicographically sequence is used\n\n");
+  fprintf(stderr,"\t-f\tSequence file. fasta/q file with sequences or\n");
+  fprintf(stderr,"\t  \tsequencing reads. Can be gziped. provide \"-\" if\n");
+  fprintf(stderr,"\t  \treading from stdin. If using sequencing data eg.\n");
+  fprintf(stderr,"\t  \tillumina reads, provide the -C flag to use canonical\n");
+  fprintf(stderr,"\t  \tform.\n\n");
+  fprintf(stderr,"\t-k\tkmer length. Different size kmers will be ignored.\n\n");
+  fprintf(stderr,"\t-m\tMinimum coverage thershold. Sequences must be\n");
+  fprintf(stderr,"\t  \tcovered by at least this fraction of kmers.\n");
+  fprintf(stderr,"\t  \tOtherwise, sequence is filtered out\n\n");
+  fprintf(stderr,"\t-h\tThis help message\n");
+  fprintf(stderr,"\n");
+  return -1;
+}
 
 /*
 Parse options for "count" command. See main_count.h file.
@@ -144,17 +165,22 @@ Main function for command "count". See main_count.h file.
 int main_count(int argc, char **argv) {
   //Set options
   COUNTopts opt;
-  opt.kmerfile = NULL;
-  opt.seqfile = NULL;
-  opt.seqFP = NULL;
-  opt.lower = -1;
-  opt.upper = -1;
-  opt.minfraction = 0.80;
-  opt.kmerlen = 31;
-  opt.canonical = false;
+  if(!strcmp(argv[1],"count")) {
+    opt.kmerfile = NULL;
+    opt.seqfile = NULL;
+    opt.seqFP = NULL;
+    opt.lower = -1;
+    opt.upper = -1;
+    opt.minfraction = 0.80;
+    opt.kmerlen = 31;
+    opt.canonical = false;
+  }
+  else {
+    exit(kmer_usage());
+  }
 
   //Read options
-  count_readOpt(argc, argv, &opt);
+  count_readOpt(argc - 1, argv - 1, &opt);
 
   //Open FILE options
   //Open kmer count file

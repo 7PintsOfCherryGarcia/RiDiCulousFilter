@@ -7,9 +7,6 @@
 int main_count(int, char**);
 int main_gc(int, char**);
 
-int main_kmer(int argc, char **argv) {
-  return 0;
-}
 
 static int main_usage() {
   fprintf(stderr,"Usage: RiDiCulous [command] [options] -f FILE\n\n");
@@ -26,13 +23,13 @@ static int main_usage() {
 
 int main(int argc, char *argv[]) {
 
-  if(argc <= 1) {
+  if(argc <= 2) {
     return main_usage();
   }
 
   if(strcmp(argv[1],"count") == 0) {
     fprintf(stderr,"Command: count\n\n");
-    return main_count(argc - 1, argv + 1);
+    return main_count(argc, argv);
   }
   else if(strcmp(argv[1],"gc") == 0) {
     fprintf(stderr,"command: gc\n");
@@ -40,7 +37,7 @@ int main(int argc, char *argv[]) {
   }
   else if(strcmp(argv[1],"kmer") == 0) {
     fprintf(stderr,"command: kmer\n");
-    return main_kmer(argc - 1, argv + 1);
+    return main_count(argc, argv);
   }
   else {
     fprintf(stderr,"Command: \"%s\" not recognized.\n",argv[1]);
