@@ -34,3 +34,7 @@ Fine, just compile with
 ```
 gcc -Wall -O3 -o RiDiCulous src/*.c -lm -I. -lz 
 ```
+
+> Bro, I need to filter my sequences based on "some outreagous filter that nobody will never ever use". 
+
+Sure Fam!! No problemo just hit me up in the [issues](https://github.com/7PintsOfCherryGarcia/RiDiCulousFilter/issues) section. 
