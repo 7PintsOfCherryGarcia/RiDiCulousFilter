@@ -25,7 +25,7 @@ cmake .
 make
 ```
 
-#FAQ and comments
+# FAQ and comments
 
 > Hey, I don't want to use your dumb cmake!!!
 
