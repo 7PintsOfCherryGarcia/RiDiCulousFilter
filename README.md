@@ -10,7 +10,7 @@ only GC content and kmer count/presense are implemented.
 The backbone of RiDiCulousFilter is the wonderfull [klib](https://github.com/attractivechaos/klib) library by [Attractive Chaos](https://github.com/attractivechaos)
 
 ## How does it work
-It's not that complicated. RiDiCulousFilter loops over all your sequences/reads, 
+It's quite simple. RiDiCulousFilter loops over all your sequences/reads, 
 computes the desired filter and determines if conditions are met. If so,
 sequences are printed to stdout.
 
@@ -38,3 +38,8 @@ gcc -Wall -O3 -o RiDiCulous src/*.c -lm -I. -lz
 > Bro, I need to filter my sequences based on "some outreagous filter that nobody will never ever use". 
 
 Sure Fam!! No problemo just hit me up in the [issues](https://github.com/7PintsOfCherryGarcia/RiDiCulousFilter/issues) section. 
+
+> Your "How does it work" section sucks. Please elaborate!!
+
+Sorry to hear that homie. I have put significant effort in documenting almost every single line of code.
+Try to dig in, you will it quite straight forward :)
