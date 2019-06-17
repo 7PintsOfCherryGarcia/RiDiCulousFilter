@@ -17,12 +17,12 @@ add_executable(RiDiCulous src/main.c
 #)
 find_library(ZLIB_LIBRARY
              NAMES z)
-find_library(MLIB_LIBRARY
-             NAMES m)
+#find_library(MLIB_LIBRARY
+#             NAMES m)
 
 
 get_cmake_property(_variableNames VARIABLES)
 
 target_link_libraries(RiDiCulous
-                      ${ZLIB_LIBRARY}
-                      ${MLIB_LIBRARY})
+                      ${ZLIB_LIBRARY})
+                      #${MLIB_LIBRARY})
