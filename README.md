@@ -1,7 +1,7 @@
 # RiDiCulousFilter
-## Filter sequences based on a variety of conditions (even if they are comical)
+##@ Filter sequences based on a variety of conditions (even if they are comical)
 
-### About
+## About
 RiDiCulousFilter lets you select sequence data such as sequencing reads or assembly contigs
 based on different criteria. For example: kmer count content or GC content. In the future 
 other filtering parameters will be added such as protein domain prescence, and sequence 
@@ -14,7 +14,7 @@ It's quite simple. RiDiCulousFilter loops over all your sequences/reads,
 computes the desired filter and determines if conditions are met. If so,
 sequences are printed to stdout.
 
-### How do I get this dumb thing
+## How do I get this dumb thing
 Easy peasy lemon squasy. You will need any linux machine (should work with IOS).
 Other requirements are the zlib library, gcc, and cmake.
 
@@ -24,6 +24,13 @@ cd RiDiCulousFilter
 cmake .
 make
 ```
+
+## How do I use RiDiCulousFilter?
+You will find it is straight forward and simple.
+### Filter sequencing reads based on kmer counts
+Imagine we have a fastq file myLibrary.fq.gz which contains the sequencing reads of a whole genome shotgun sequencing experiment of an indivdual of the species [*Zeep Zanflorp*](https://rickandmorty.fandom.com/wiki/Zeep_Xanflorp), a very interesting organism with a 10Gb genome. We know myLibrary.fq.gz contains enough data such that *Zeep Zanflorp* was sequenced at 30X depth. For our purposes, we are interested genes at high copy number say 8, which are known to be involved in the synthesis of Gooble Boxes. Instead of trying to assemble the entire genome and then search for such high copy genes, we want to extract all sequencing reads 
+
+
 
 # FAQ and comments
 
