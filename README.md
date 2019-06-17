@@ -28,7 +28,7 @@ make
 ## How do I use RiDiCulousFilter?
 You will find it is straight forward and simple.
 ### Filter sequencing reads based on kmer counts
-Imagine we have a fastq file myLibrary.fq.gz which contains the sequencing reads of a whole genome shotgun sequencing experiment of an indivdual of the species [*Zeep Zanflorp*](https://rickandmorty.fandom.com/wiki/Zeep_Xanflorp), a very interesting organism with a 10Gb genome. We know myLibrary.fq.gz contains enough data such that *Zeep Zanflorp* was sequenced at 30X depth. For our purposes, we are interested genes at high copy number say 8, which are known to be involved in the synthesis of Gooble Boxes. Instead of trying to assemble the entire genome and then search for such high copy genes, we want to extract all sequencing reads 
+Imagine a fastq file: myLibrary.fq.gz. It contains reads of a whole genome shotgun sequencing experiment of an indivdual of the species [*Zeep Zanflorp*](https://rickandmorty.fandom.com/wiki/Zeep_Xanflorp), an interesting organism with a 10Gb genome. We know myLibrary.fq.gz contains data such that *Zeep Zanflorp* was sequenced at 30X depth. We are interested in genes at high copy number say 8, known to be involved in the synthesis of Gooble Boxes. Instead of trying to assemble the entire genome and then search for such high copy genes, we extract all reads that have kmers at a count expected from regions which exist in 8 copies at 30X in a 10Gb genome.   
 
 
 
