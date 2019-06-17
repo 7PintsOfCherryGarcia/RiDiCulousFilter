@@ -46,10 +46,10 @@ kmc -k25 -cs500 Microverse.fq.gz Microverse
 ***Run RiDiCulousFilter on the output kmer count table of kmc***
 
 ```
-kmc_dump Microverse - | RiDiCulous count -c - -f Microverse.fq.gz -l 220 -u 260 -C -m 0.8 -k 17 > filteredMicroverse.fq
+kmc_dump Microverse /dev/stdout | RiDiCulous count -c - -f Microverse.fq.gz -l 220 -u 260 -C -m 0.8 -k 17 > filteredMicroverse.fq
 ```
 
-filteredMicroverse.fq will contain all the reads that had at least 80% of it's kmers at a count between 220 and 240 inclusive
+filteredMicroverse.fq will contain all the reads that had at least 80% of it's kmers at a count between 220 and 260 inclusive
 
 
 # FAQ and comments
