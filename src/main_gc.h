@@ -17,7 +17,6 @@ typedef struct {
   double maxGC;        // maximum GC content thershold
   char *seqfile;       // sequence filename
   gzFile seqFP;        // sequence file object
-  int canonical;
 } GCopts;
 
 

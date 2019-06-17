@@ -244,8 +244,9 @@ int main_count(int argc, char **argv) {
   int rkCount = 0;
   count_readKmers(fp, opt, h, &k, &kmerCount, &rkCount);
   if(kmerCount <= 0) {
-    fprintf(stderr, "\t ERROR: kmer count table could not be parsed.\n\n");
-    return count_usage();
+    fprintf(stderr, "\t ERROR: kmer table could not be parsed.\n\n");
+    if(!opt.kmerCMD) return count_usage();
+    return kmer_usage();
   }
   fclose(fp);
   fprintf(stderr,"\t\t Loaded %d kmers.\n",kmerCount);
