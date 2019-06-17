@@ -26,9 +26,23 @@ make
 ```
 
 ## How do I use RiDiCulousFilter?
-You will find it is straight forward and simple.
+
+You will find it is straight forward and simple. Here are a couple of examples.
+
 ### Filter sequencing reads based on kmer counts
-Imagine a fastq file: myLibrary.fq.gz. It contains reads of a whole genome shotgun sequencing experiment of an indivdual of the species [*Zeep Zanflorp*](https://rickandmorty.fandom.com/wiki/Zeep_Xanflorp), an interesting organism with a 10Gb genome. We know myLibrary.fq.gz contains data such that *Zeep Zanflorp* was sequenced at 30X depth. We are interested in genes at high copy number say 8, known to be involved in the synthesis of Gooble Boxes. Instead of trying to assemble the entire genome and then search for such high copy genes, we extract all reads that have kmers at a count expected from regions which exist in 8 copies at 30X in a 10Gb genome.   
+Imagine a fastq file: [Microverse](https://rickandmorty.fandom.com/wiki/Microverse).fq.gz. It contains reads of a whole genome shotgun sequencing experiment of an indivdual of the species [*Zeep Zanflorp*](https://rickandmorty.fandom.com/wiki/Zeep_Xanflorp), an interesting organism with a 10Gb genome. We know Microverse.fq.gz contains data such that *Zeep Zanflorp* was sequenced at 30X depth. We are interested in genes at high copy number say 8, known to be involved in the synthesis of Gooble Boxes. Instead of trying to assemble the entire genome and then search for such high copy genes, we extract all reads that have kmers at a count expected from regions at 8 copies.
+**Determining kmer count threshold***
+8(copies)*30X = 240, ***Reads from these regions should have kmers whose counts are around 240***
+
+***Count kmers. We will use [kmc](https://github.com/refresh-bio/KMC) and a kmer length of 25***
+```
+kmc -k25 -cs500 Microverse.fq.gz Microverse
+```
+****Run RiDiCulousFilter on the output kmer count table of kmc**
+```
+kmc_dum Microverse - | RiDiCulous count -c - -f Microverse.fq.gz -l 220 -u 260 -C -m 0.8 -k 17 > filteredMicroverse.fq
+```
+filteredMicroverse.fq will contain all the reads that had at least 80% of it's kmers at a count between 220 and 240 inclusive
 
 
 
