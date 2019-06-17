@@ -25,7 +25,9 @@ cmake .
 make
 ```
 > Hey, I don't want your dumb cmake!!!
+
 Fine, just compile with
+
 ```
 gcc -Wall -O3 -o RiDiCulous src/*.c -lm -I. -lz 
 ```
