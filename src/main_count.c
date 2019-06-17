@@ -69,7 +69,7 @@ Parse options for "count" command. See main_count.h file.
 */
 void count_readOpt(int argc, char **argv, COUNTopts* opt) {
   int elem;
-  while (( elem = getopt(argc, argv, ":c:Cf:hk:l:m:u:") ) >= 0) {
+  while (( elem = getopt(argc, argv, "c:Cf:hk:l:m:u:") ) >= 0) {
     switch(elem) {
     case 'l':
       opt->lower = atoi(optarg);
@@ -92,19 +92,23 @@ void count_readOpt(int argc, char **argv, COUNTopts* opt) {
       opt->seqfile = optarg;
       break;
     case 'h':
-      exit(count_usage());
+      if(!opt->kmerCMD) exit(count_usage());
+      exit(kmer_usage());
+      break;
     case 'm':
       opt->minfraction = atof(optarg);
       if(!opt->minfraction) {
         fprintf(stderr,"\t ERROR: Option \"-m %s\" not valid\n\n",optarg);
-        exit(count_usage());
+        if(!opt->kmerCMD) exit(count_usage());
+        exit(kmer_usage());
       }
       break;
     case 'k':
       opt->kmerlen = atoi(optarg);
       if(!opt->kmerlen) {
         fprintf(stderr,"\t ERROR: Option \"-k %s\" not valid\n\n",optarg);
-        exit(count_usage());
+        if(!opt->kmerCMD) exit(count_usage());
+        exit(kmer_usage());
       }
       break;
     case 'C':
@@ -115,7 +119,8 @@ void count_readOpt(int argc, char **argv, COUNTopts* opt) {
   if (!opt->kmerfile || !opt->seqfile) {
     fprintf(stderr,"\t ERROR: Please provide kmer count file (-c) and\n");
     fprintf(stderr,"\t        sequence file (-f)\n\n");
-    exit(count_usage());
+    if(!opt->kmerCMD) exit(count_usage());
+    exit(kmer_usage());
   }
 
   if((opt->lower < 0) || (opt->upper < 0 )) {
@@ -146,8 +151,8 @@ Print input options
 void count_printOpt(COUNTopts opt) {
   fprintf(stderr,"\t kmer count file: %s\n",opt.kmerfile);
   fprintf(stderr,"\t sequence file: %s\n",opt.seqfile);
-  fprintf(stderr,"\t lower count bound: %d\n",opt.lower);
-  fprintf(stderr,"\t upper count bound: %d\n",opt.upper);
+  if(!opt.kmerCMD) fprintf(stderr,"\t lower count bound: %d\n",opt.lower);
+  if(!opt.kmerCMD) fprintf(stderr,"\t upper count bound: %d\n",opt.upper);
   fprintf(stderr,"\t minimum read coverage fraction: %f\n",opt.minfraction);
   fprintf(stderr,"\t kmer length: %d\n",opt.kmerlen);
   if(opt.canonical) {
@@ -174,13 +179,22 @@ int main_count(int argc, char **argv) {
     opt.minfraction = 0.80;
     opt.kmerlen = 31;
     opt.canonical = false;
+    opt.kmerCMD = false;
   }
   else {
-    exit(kmer_usage());
+    opt.kmerfile = NULL;
+    opt.seqfile = NULL;
+    opt.seqFP = NULL;
+    opt.lower = 10000;
+    opt.upper = 10001;
+    opt.minfraction = 0.80;
+    opt.kmerlen = 31;
+    opt.canonical = false;
+    opt.kmerCMD = true;
   }
 
   //Read options
-  count_readOpt(argc - 1, argv - 1, &opt);
+  count_readOpt(argc - 1, argv + 1, &opt);
 
   //Open FILE options
   //Open kmer count file
@@ -194,7 +208,8 @@ int main_count(int argc, char **argv) {
   fp = fopen(opt.kmerfile, "r");
   if (!fp) {
     fprintf(stderr,"\t ERROR: Can't open input file %s.\n\n", opt.kmerfile);
-    return(count_usage());
+    if(!opt.kmerCMD) return(count_usage());
+    return(kmer_usage());
   }
 
   //Open sequence file
@@ -202,7 +217,8 @@ int main_count(int argc, char **argv) {
     if(stdinFlag == 1) {
       fprintf(stderr,"\t ERROR: -f - and  -c - are incompatibe.\n");
       fprintf(stderr,"\t Only one input file can be read from stdin.\n\n");
-      return count_usage();
+      if(!opt.kmerCMD) return count_usage();
+      return kmer_usage();
     }
     opt.seqfile = "/dev/stdin";
   }
@@ -210,7 +226,8 @@ int main_count(int argc, char **argv) {
   opt.seqFP = gzopen(opt.seqfile,"r");
   if(!opt.seqFP) {
     fprintf(stderr,"\t ERROR: Can't open sequence file.\n\n");
-    return count_usage();
+    if(!opt.kmerCMD) return count_usage();
+    return kmer_usage();
   }
 
 
@@ -295,6 +312,14 @@ void count_readKmers(FILE *fp,
       lineNum += 1;
       continue;
     }
+    if(opt.kmerCMD) {
+      *k = kh_put(kmer, h, kmer,&absent);
+      kh_key(h, *k) = strdup(kmer);
+      *kmerCount += 1;
+      lineNum += 1;
+      continue;
+    }
+
     countStr = strtok(NULL,"\t");
     if(!countStr) {
       fprintf(stderr,"\t\t WARNING: In line %d\n\t\t\t kmer %s", lineNum, kmer);
@@ -362,7 +387,7 @@ void count_filterReads(khash_t(kmer) *h,
     else *numFiltered += 1;
     *numReads += 1;
   }
-  free(revComp);
+  if(opt.canonical) free(revComp);
   kseq_destroy(seq);
   free(kmer);
 }

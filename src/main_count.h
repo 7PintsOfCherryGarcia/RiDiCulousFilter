@@ -31,6 +31,7 @@ typedef struct {
   gzFile seqFP;        // sequence filen object
   double minfraction;  // kmer coverage fraction threshold
   int canonical;
+  int kmerCMD;
 } COUNTopts;
 
 
