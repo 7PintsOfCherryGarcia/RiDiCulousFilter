@@ -24,7 +24,10 @@ cd RiDiCulousFilter
 cmake .
 make
 ```
-> Hey, I don't want your dumb cmake!!!
+
+#FAQ and comments
+
+> Hey, I don't want to use your dumb cmake!!!
 
 Fine, just compile with
 
