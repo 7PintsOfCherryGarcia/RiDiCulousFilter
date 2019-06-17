@@ -25,8 +25,6 @@ int gc_usage() {
   fprintf(stderr,"\t  \tform.\n\n");
   fprintf(stderr,"\t-G\tMaximum GC content. Sequences may have at most.\n");
   fprintf(stderr,"\t  \tthis GC content.\n\n");
-  fprintf(stderr,"\t-C\tUse canonical kmers. Sequences are reversed complemente");
-  fprintf(stderr,"d\n\t \tand smallest lexicographically sequence is used\n\n");
   fprintf(stderr,"\t-h\tThis help message\n");
   fprintf(stderr,"\n");
   return -1;
@@ -56,8 +54,6 @@ void gc_readOpt(int argc, char **argv, GCopts *opt) {
         exit(gc_usage());
       }
       break;
-    case 'C':
-      opt->canonical=true;
     }
   }
 
@@ -84,12 +80,6 @@ void gc_printOpt(GCopts opt) {
   fprintf(stderr,"\t sequence file: %s\n",opt.seqfile);
   fprintf(stderr,"\t minimum GC content: %f\n",opt.minGC);
   fprintf(stderr,"\t maximum GC content: %f\n",opt.maxGC);
-  if(opt.canonical) {
-    fprintf(stderr,"\t use canonical kmers: true\n");
-  }
-  else {
-    fprintf(stderr,"\t use canonical kmers: false\n");
-  }
 }
 
 
@@ -99,7 +89,6 @@ int main_gc(int argc, char **argv) {
   opt.seqFP = NULL;
   opt.minGC = 0.40;
   opt.maxGC = 0.60;
-  opt.canonical = false;
 
   //Read options
   gc_readOpt(argc, argv, &opt);
@@ -134,7 +123,6 @@ void gc_filterReads(GCopts opt,
   kseq_t *seq;
   int l;
   unsigned long int totalSeq = 0;
-  char *revComp = NULL;
 
   seq = kseq_init(opt.seqFP);
   while ((l = kseq_read(seq)) >= 0) {
@@ -146,12 +134,6 @@ void gc_filterReads(GCopts opt,
       break;
     }
 
-    if(opt.canonical) {
-      revComp = gc_revComp(l, seq->seq.s);
-      //Compare sequence and reverse compliment. Keep lexicgraphically
-      //smales one
-      seq->seq.s = (compSeq(seq->seq.s,revComp,l) <= 0) ? seq->seq.s:revComp;
-    }
 
     if(gc_queryRead(opt, seq->seq.s, l)) {
       //TODO Correct for qhen input is fasta
@@ -161,7 +143,6 @@ void gc_filterReads(GCopts opt,
     else *numFiltered += 1;
     *numReads += 1;
   }
-  free(revComp);
   kseq_destroy(seq);
 }
 
