@@ -84,8 +84,8 @@ void length_readOpt(int argc, char **argv, LENopts* opt) {
 */
 void length_printOpt(LENopts opt) {
   fprintf(stderr,"\t sequence file: %s\n",opt.seqfile);
-  fprintf(stderr,"\t minimum sequence length: %d\n",opt.minLen);
-  fprintf(stderr,"\t maximum sequence length: %d\n",opt.maxLen);
+  fprintf(stderr,"\t minimum sequence length: %ld\n",opt.minLen);
+  fprintf(stderr,"\t maximum sequence length: %ld\n",opt.maxLen);
 }
 
 int main_length(int argc, char **argv) {

@@ -7,8 +7,8 @@ KSEQ_INIT(gzFile, gzread)
 */
 
 typedef struct {
-  int minLen;           // lower kmer count bound (inclusive)
-  int maxLen;           // upper kmer count bound (inclusive)
+  unsigned long int minLen;           // lower kmer count bound (inclusive)
+  unsigned long int maxLen;           // upper kmer count bound (inclusive)
   char *seqfile;       // sequence filename
   gzFile seqFP;        // sequence filen object
 } LENopts;
