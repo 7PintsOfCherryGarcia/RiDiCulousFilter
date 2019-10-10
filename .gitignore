@@ -58,3 +58,8 @@ GRTAGS
 GTAGS
 GPATH
 .R*
+CMake*
+Makefile
+*.cmake
+tmp
+RiDiCulous

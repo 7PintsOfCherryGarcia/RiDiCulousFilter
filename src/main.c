@@ -8,6 +8,7 @@
 int main_count(int, char**);
 
 int main_gc(int, char**);
+int main_length(int, char**);
 
 
 
@@ -15,11 +16,12 @@ int main_gc(int, char**);
 static int main_usage() {
   fprintf(stderr,"Usage: RiDiCulous [command] [options] -f FILE\n\n");
   fprintf(stderr,"Commands:\n\n");
-  fprintf(stderr,"\tcount -  Filter reads based on kmer counts.\n");
-  fprintf(stderr,"\t         You must suply a kmer count table.\n\n");
-  fprintf(stderr,"\tkmer  -  Filter reads based on kmer presence.\n");
-  fprintf(stderr,"\t         You must suply a kmer table.\n\n");
-  fprintf(stderr,"\tgc    -  Filter reads based on GC content.\n\n");
+  fprintf(stderr,"\tcount     -  Filter reads based on kmer counts.\n");
+  fprintf(stderr,"\t             You must suply a kmer count table.\n\n");
+  fprintf(stderr,"\tkmer      -  Filter reads based on kmer presence.\n");
+  fprintf(stderr,"\t             You must suply a kmer table.\n\n");
+  fprintf(stderr,"\tgc        -  Filter reads based on GC content.\n\n");
+  fprintf(stderr,"\tlength    -  Filter reads based on length.\n\n");
   fprintf(stderr,"Help information for these commands is diplayed on\n");
   fprintf(stderr,"erroneous execution or when the -h flag is provided.\n\n");
   return -1;
@@ -50,6 +52,10 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,"command: kmer\n");
     //See main_gc.c
     return main_count(argc, argv);
+  }
+  else if(strcmp(argv[1],"length") == 0) {
+    fprintf(stderr,"command: length\n");
+    return main_length(argc, argv);
   }
   else {
     fprintf(stderr,"Command: \"%s\" not recognized.\n",argv[1]);
