@@ -88,6 +88,7 @@ void length_printOpt(LENopts opt) {
   fprintf(stderr,"\t maximum sequence length: %ld\n",opt.maxLen);
 }
 
+
 int main_length(int argc, char **argv) {
   //Set options
   LENopts opt;
@@ -130,5 +131,6 @@ int main_length(int argc, char **argv) {
     numSeq += 1;
 
   }
+  kseq_destroy(seq);
   return 0;
 }
