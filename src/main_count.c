@@ -314,7 +314,8 @@ void count_readKmers(FILE *fp,
       continue;
     }
     if(opt.kmerCMD) {
-      *k = kh_put(kmer, h, kmer,&absent);
+      //TODO something weird might happens with hash name and 'kmer' variable
+      *k = kh_put(kmer, h, kmer, &absent);
       kh_key(h, *k) = strdup(kmer);
       *kmerCount += 1;
       lineNum += 1;
