@@ -4,6 +4,7 @@
 #include <time.h>
 #include "../khash.h"
 #include "../kseq.h"
+#include "../ksort.h"
 
 /*Initialize Heng Li's kseq
   KSEQ_INIT - Initialize sequence reading stream
@@ -13,18 +14,34 @@
 KSEQ_INIT(gzFile, gzread)
 
 /*Initialize Heng Li's khash
-  KHASH_MAP_INIT_STR - Initiate hash table with string pointers as keys
-  kmer - Name of hash table
-  unsigend int - type of values to use
+  KHASH_SET_INIT_INT - Initiate hash table with ints as keys
+  *DB - Name of hash table
+  */
+KHASH_SET_INIT_INT(intDB)
+
+// Struct to store a sequence random index and lenght
+typedef struct {
+  unsigned int seqIdx;
+  unsigned int seqLen;
+  unsigned int seqRan;
+} sequenceVal;
+
+/*Initialize Heng Li's Ksort
 */
-KHASH_MAP_INIT_INT(seqDB, unsigned int)
-KHASH_MAP_INIT_INT(intDB, unsigned int)
+// Comparison function (less than)
+#define pair_lt(a, b) ((a).seqRan < (b).seqRan)
+
+//#define pair_lt(a, b) ((a).key < (b).key)
+// Initialize with type(int) and comparison function(pair_lt)
+KSORT_INIT(pair, sequenceVal, pair_lt)
+
+// Don't know what this does
+KSORT_INIT_GENERIC(int)
 
 int main(int argc, char **argv) {
   //Random seed
   //TODO Give option to not always being random
   srand(time(0)*time(0));
-
 
   char *seqfile;
   gzFile seqFP;
@@ -32,7 +49,7 @@ int main(int argc, char **argv) {
   unsigned long numSeq;
   kseq_t *seq;
   int l;
-  int *rnums;
+  sequenceVal *rnums;
   unsigned int randInt;
 
   if(argc < 2) {
@@ -60,13 +77,9 @@ int main(int argc, char **argv) {
   }
 
   //Start hash tables
-  khash_t(seqDB) *h;
   khash_t(intDB) *inth;
-  h = kh_init(seqDB);
   inth = kh_init(intDB);
-  khint_t k;
   khint_t intk;
-  k = kh_end(h);
   intk = kh_end(inth);
   int absent = 0;
   absent += 1;
@@ -74,12 +87,16 @@ int main(int argc, char **argv) {
   seq = kseq_init(seqFP);
   TotalSeq = 0;
   numSeq = 0;
-  rnums = (int *)malloc(1000*sizeof(int));
+  int maxNumSeq = 100000;
+  //block controls reallocation size in case more space is needed
+  int block = 2;
+  rnums = (sequenceVal *)malloc(maxNumSeq*sizeof(sequenceVal));
   if(!rnums) {
     fprintf(stderr,"FAILED ALLOCATION\n");
     //TODO exit properly
     exit(-1);
   }
+  int tmp = 0;
   while ((l = kseq_read(seq)) >= 0) {
     if (l == 0) continue;
     if (l <= 0) {
@@ -87,35 +104,78 @@ int main(int argc, char **argv) {
       break;
     }
     TotalSeq += l;
-    numSeq += 1;
     //TODO bug if two sequences are assigend the same random number
     //TODO realloc if buffer runs out
     randInt = rand();
-    rnums[numSeq] = randInt;
-    intk = kh_put(intDB, inth, randInt, &absent);
-    kh_key(inth, intk) = numSeq;
+    if(randInt > tmp) {
+      tmp = randInt;
+    }
+    //Reallocate more space if needed
+    if(numSeq >= maxNumSeq && (numSeq%maxNumSeq) == 0) {
+      fprintf(stderr,"Reallocating\n");
+      rnums = realloc(rnums,(block*maxNumSeq)*sizeof(sequenceVal));
+      block += 1;
+    }
+
+    rnums[numSeq].seqRan = randInt;
+    rnums[numSeq].seqIdx = numSeq;
+    rnums[numSeq].seqLen = l;
+    intk = kh_put(intDB, inth, numSeq, &absent);
+    numSeq += 1;
   }
+  rnums = realloc(rnums,numSeq*sizeof(sequenceVal));
+  fprintf(stderr,"Finished first pass\n");
+
+  //Sort key array
+  ks_mergesort(pair, numSeq, rnums, 0);
+
+  //Loop over rnums and compute length until desired cummulative length
+  unsigned int sampledLength = 0;
+  unsigned int seqIdx = 0;
+  while(sampledLength < 6000000) {
+    sampledLength += rnums[seqIdx].seqLen;
+      seqIdx += 1;
+  }
+  fprintf(stderr,"sampled length will be: %d\n",sampledLength);
+
+
+  fprintf(stderr,"hash size before deleting is: %d\n",kh_size(inth));
+  unsigned int seqKey;
+  for(unsigned int i = seqIdx; i < numSeq; i++) {
+    seqKey = rnums[i].seqIdx;
+    intk = kh_get(intDB, inth, seqKey);
+    kh_del(intDB,inth,intk);
+  }
+  fprintf(stderr,"hash size after deletingis: %d\n",kh_size(inth));
+
+  numSeq = 0;
+  seqFP = gzopen(seqfile,"r");
+  seq = kseq_init(seqFP);
+  unsigned int tmpLength = 0;
+  while ((l = kseq_read(seq)) >= 0) {
+    if (l == 0) continue;
+    if (l <= 0) {
+      fprintf(stderr,"\nError in sequence file.\n");
+      break;
+    }
+    intk = kh_get(intDB,inth,numSeq);
+    if (intk == kh_end(inth)) {
+      ;;
+    }
+    else {
+      tmpLength += l;
+    }
+    numSeq += 1;
+  }
+  fprintf(stderr,"Sampled number of seqs:%ld\n",numSeq);
+  fprintf(stderr,"Sampled length: %d\n",tmpLength);
+  fprintf(stderr,"Finished second pass\n");
+
+  fprintf(stderr,"idx is: %d\n",seqIdx);
   fprintf(stderr, "%ld total bases in %ld sequences.\n", TotalSeq, numSeq);
-  fprintf(stderr,"%d\n",rnums[10]);
 
-
-
-
-  //Loop over sequences, count number of sequences and total bases
-
-  //k = kh_put(seqDB,h,s,&absent);
-
-
-
-
-  //for (k = 0; k < kh_end(h); ++k) {
-  //  if (kh_exist(h, k)) {
-  //    free((char*)kh_key(h, k));
-  //  }
-  //}
   free(rnums);
   kseq_destroy(seq);
-  kh_destroy(seqDB, h);
   kh_destroy(intDB, inth);
   gzclose(seqFP);
 }
