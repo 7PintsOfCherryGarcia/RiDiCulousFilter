@@ -39,6 +39,15 @@ KSORT_INIT(pair, sequenceVal, pair_lt)
 KSORT_INIT_GENERIC(int)
 
 int main(int argc, char **argv) {
+  if(argc < 3) {
+    fprintf(stderr,"ERROR\n");
+    exit(-1);
+  }
+
+  for(int i = 0; i < argc; i++) {
+    fprintf(stderr,"%s\n",argv[i]);
+  }
+  exit(-1);
   //Random seed
   //TODO Give option to not always being random
   srand(time(0)*time(0));
@@ -52,13 +61,7 @@ int main(int argc, char **argv) {
   sequenceVal *rnums;
   unsigned int randInt;
 
-  if(argc < 2) {
-    fprintf(stderr,"ERROR\n");
-  }
 
-  for(int i = 0; i < argc; i++) {
-    fprintf(stderr,"%s\n",argv[i]);
-  }
 
   //Open seq file and initialize
   if(strcmp(argv[1],"-") == 0) {
@@ -125,14 +128,14 @@ int main(int argc, char **argv) {
   }
   rnums = realloc(rnums,numSeq*sizeof(sequenceVal));
   fprintf(stderr,"Finished first pass\n");
-
+  fprintf(stderr, "%ld total bases in %ld sequences.\n", TotalSeq, numSeq);
   //Sort key array
   ks_mergesort(pair, numSeq, rnums, 0);
 
   //Loop over rnums and compute length until desired cummulative length
   unsigned int sampledLength = 0;
   unsigned int seqIdx = 0;
-  while(sampledLength < 6000000) {
+  while(sampledLength < 12000000) {
     sampledLength += rnums[seqIdx].seqLen;
       seqIdx += 1;
   }
@@ -152,6 +155,7 @@ int main(int argc, char **argv) {
   seqFP = gzopen(seqfile,"r");
   seq = kseq_init(seqFP);
   unsigned int tmpLength = 0;
+  unsigned int filtSeq = 0;
   while ((l = kseq_read(seq)) >= 0) {
     if (l == 0) continue;
     if (l <= 0) {
@@ -164,15 +168,16 @@ int main(int argc, char **argv) {
     }
     else {
       tmpLength += l;
+      filtSeq += 1;
+      printf(">%s\n%s\n",seq->name.s,seq->seq.s);
     }
     numSeq += 1;
   }
-  fprintf(stderr,"Sampled number of seqs:%ld\n",numSeq);
-  fprintf(stderr,"Sampled length: %d\n",tmpLength);
-  fprintf(stderr,"Finished second pass\n");
 
+  fprintf(stderr,"Sampled number of seqs: %ld\n", numSeq);
+  fprintf(stderr,"Sampled length: %d\n", tmpLength);
+  fprintf(stderr,"Finished second pass\n");
   fprintf(stderr,"idx is: %d\n",seqIdx);
-  fprintf(stderr, "%ld total bases in %ld sequences.\n", TotalSeq, numSeq);
 
   free(rnums);
   kseq_destroy(seq);
