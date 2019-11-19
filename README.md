@@ -18,6 +18,7 @@ dig into the code I have tried to document it as much as possible.
 ## How do I get this thing
 Easy peasy lemon squeezy. You will need any linux machine (should work with IOS).
 Other requirements are the zlib (to read compressed input) library, gcc (to compile), and cmake (generate the makefile).
+RiDiCulous also uses khash and kseq from [klib](https://github.com/attractivechaos/klib). This .h files are already included in this repo. 
 
 ```
 git clone https://github.com/7PintsOfCherryGarcia/RiDiCulousFilter.git
